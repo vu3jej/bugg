@@ -1,43 +1,102 @@
-from collections.abc import Callable
-from typing import Literal, Protocol
+import re
+from collections import deque
+from functools import partial
+
+from talon import Module, actions
+
+mod = Module()
 
 
-class Formatter(Protocol):
-    def format(self, text: str) -> str: ...
+mod.list('code_formatter', desc='Identifier formatters')
 
 
-class SimpleFormatter:
-    def __init__(self, formatter_func: Callable[[str], str]):
-        self.formatter_func = formatter_func
-
-    def format(self, text: str) -> str:
-        return self.formatter_func(text)
+def stitcher(sep: str):
+    return partial(str.join, sep)
 
 
-def create_formatter(
-    kind: Literal["simple", "identifier"], formatter_fn: Callable[[str], str] | None
-) -> Formatter:
-    match kind:
-        case "simple":
-            return SimpleFormatter(formatter_fn)
+class SpecialCaseFormatter:
+    """pun intended"""
+
+    def to_camel(self, tokens: list[str]) -> str:
+        tokens = deque(tokens)
+        first = tokens.popleft()
+        return first + ''.join(t.capitalize() for t in tokens)
+
+    def to_pascal(self, tokens: list[str]) -> str:
+        return ''.join(t.capitalize() for t in tokens)
+
+    def to_screaming_snake(self, tokens: list[str]) -> str:
+        return '_'.join(t.upper() for t in tokens)
+
+    def to_slasher(self, tokens: list[str]) -> str:
+        return '/' + '/'.join(t for t in tokens)
 
 
-class Lower:
-    def __call__(self, text: str) -> str:
-        return text.lower()
+formatter = SpecialCaseFormatter()
 
 
-class Upper:
-    def __call__(self, text: str) -> str:
-        return text.upper()
-
-
-class Capitalize:
-    def __call__(self, text: str) -> str:
-        return text.capitalize()
-
-
-formatters = {
-    "ALL_CAPS": create_formatter("simple", Upper()),
-    "ALL_LOWERCASE": create_formatter("simple", Lower()),
+formatter_map = {
+    'camelCase': formatter.to_camel,
+    'snakeCase': stitcher('_'),
+    'kebabCase': stitcher('-'),
+    'screamingSnakeCase': formatter.to_screaming_snake,
+    'pascalCase': formatter.to_pascal,
+    'unseparated': stitcher(''),
+    'doubleUnderscoreSeparated': stitcher('__'),
+    'dotSeparated': stitcher('.'),
+    'doubleColonSeparated': stitcher('::'),
+    'slashSeparated': stitcher('/'),
+    'leadingSlashSeparated': formatter.to_slasher,
+    'singleQuoted': partial(actions.user.surround_string, 'singleQuotes'),
+    'doubleQuoted': partial(actions.user.surround_string, 'doubleQuotes'),
+    'allCaps': partial(str.upper),
 }
+
+
+string_formatters = ['singleQuoted', 'doubleQuoted', 'allCaps']
+
+
+@mod.capture(rule='{user.code_formatter}+')
+def code_formatters(m) -> list[str]:
+    """Returns a list of code formatters"""
+    return m.code_formatter_list
+
+
+@mod.capture(rule='<user.code_formatters> <user.text>')
+def format_identifier(m) -> str:
+    """Formats identifier and returns a string"""
+    return format_phrase(m.text, m.code_formatters)
+
+
+def string_to_tokens(string):
+    return re.findall(r'[a-zA-Z0-9]+', string)
+
+
+def format_phrase(text, formatters: list[str]) -> str:
+    for formatter_name in reversed(formatters):
+        formatter = formatter_map[formatter_name]
+
+        if formatter_name in string_formatters:
+            arg = text
+        else:
+            arg = string_to_tokens(text)
+
+        text = formatter(arg)
+
+    return text
+
+
+@mod.action_class
+class Actions:
+    def get_formatted_text(text: str, formatters: list[str] | str) -> str:
+        """Get formatted text"""
+        if isinstance(formatters, str):
+            formatters = [formatters]
+        return format_phrase(text, formatters)
+
+    def insert_formatted_text(text: str, formatters: list[str] | str) -> None:
+        """Insert formatted text"""
+        # if isinstance(formatters, str):
+        #     formatters = [formatters]
+        formatted_text = actions.user.get_formatted_text(text, formatters)
+        actions.insert(formatted_text)

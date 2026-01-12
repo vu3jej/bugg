@@ -3,19 +3,19 @@ from types import SimpleNamespace
 from talon import Context, Module, app
 
 mod = Module()
-mod.tag("language_override", desc="Name of programming language mode")
+mod.tag('language_override', desc='Name of programming language mode')
 
 ctx = Context()
 
 ctx_language_override = Context()
-ctx_language_override.matches = "tag: user.language_override"
+ctx_language_override.matches = 'tag: user.language_override'
 
 
 overrides = SimpleNamespace(language=None)
-language_extensions = {"python": ".py"}
+language_extensions = {'python': '.py'}
 
 
-@ctx_language_override.action("code.language")
+@ctx_language_override.action('code.language')
 def get_overridden_language_mode():
     return overrides.language
 
@@ -27,7 +27,7 @@ class Actions:
         overrides.language = language
 
         ctx.tags = []
-        ctx.tags = ["user.language_override"]
+        ctx.tags = ['user.language_override']
 
     def unset_language_mode():
         """"""
@@ -38,6 +38,6 @@ class Actions:
     def show_overridden_language_mode():
         """"""
         if overrides.language is None:
-            app.notify("No override (auto mode)")
+            app.notify('No override (auto mode)')
         else:
-            app.notify(f"[LANGUAGE MODE OVERRIDE] {overrides.language}")
+            app.notify(f'[LANGUAGE MODE OVERRIDE] {overrides.language}')

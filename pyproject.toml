@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "ipython>=9.6.0",
+    "more-itertools>=10.8.0",
     "pre-commit>=4.3.0",
 ]
 
@@ -12,4 +13,10 @@ line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-select = ["ANN", "B", "F", "FURB", "I", "N", "S", "UP"]
+select =["ANN", "B", "D", "E", "F", "FURB", "I", "N", "S", "UP"]
+
+[tool.ruff.format]
+# Enable reformatting of code snippets in docstrings.
+docstring-code-format = true
+# Prefer single quotes over double quotes.
+quote-style = "single"
