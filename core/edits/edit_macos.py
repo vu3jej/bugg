@@ -2,6 +2,8 @@ from talon import Context, actions, clip
 
 ctx = Context()
 
+ctx.matches = 'os: mac'
+
 
 @ctx.action_class('edit')
 class Actions:
@@ -13,6 +15,14 @@ class Actions:
 
     def delete():
         actions.key('backspace')
+
+    def delete_line():
+        actions.edit.select_line()
+        actions.edit.delete()
+
+    def delete_word():
+        actions.edit.select_word()
+        actions.edit.delete()
 
     def down():
         actions.key('down')
@@ -32,11 +42,22 @@ class Actions:
     def extend_file_end():
         actions.key('shift-cmd-down')
 
-    def extend_line_left():
+    # def extend_line_left():
+    #     actions.key('shift-cmd-left')
+    #
+    # def extend_line_right():
+    #     actions.key('shift-cmd-right')
+    def extend_line_start():
         actions.key('shift-cmd-left')
 
-    def extend_line_right():
+    def extend_line_end():
         actions.key('shift-cmd-right')
+
+    def extend_line_up():
+        actions.key('shift-up')
+
+    def extend_line_down():
+        actions.key('shift-down')
 
     def extend_up():
         actions.key('shift-up')
@@ -83,22 +104,48 @@ class Actions:
     def line_end():
         actions.key('cmd-right')
 
+    def line_insert_up():
+        actions.key('cmd-left enter up')
+
+    def line_up():
+        actions.key('up cmd-left')
+
+    def line_down():
+        actions.key('down cmd-left')
+
     def page_up():
         actions.key('pageup')
 
     def page_down():
         actions.key('pagedown')
 
+    def extend_page_up():
+        actions.key('shift-cmd-pageup')
+
+    def extend_page_down():
+        actions.key('shift-cmd-pagedown')
+
     def find(text: str = None):
-        if text is None:
+        if text is not None:
             clip.set_text(text, mode='find')
         actions.key('cmd-f')
 
     def find_next():
         actions.key('cmd-g')
 
+    def find_previous():
+        actions.key('shift-cmd-g')
+
     def select_all():
         actions.key('cmd-a')
+
+    def select_line(n: int = None):
+        if n is not None:
+            actions.edit.jump_line(n)
+        actions.key('cmd-right shift-cmd-left')
+
+    def select_none():
+        actions.key('right')
 
     def paste():
         actions.key('cmd-v')
@@ -108,3 +155,12 @@ class Actions:
 
     def print():
         actions.key('cmd-p')
+
+    def zoom_in():
+        actions.key('cmd-=')
+
+    def zoom_out():
+        actions.key('cmd--')
+
+    def zoom_reset():
+        actions.key('cmd-0')

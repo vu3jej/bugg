@@ -1,13 +1,92 @@
-from talon import Module, actions
+from collections.abc import Callable
+from inspect import signature
+from operator import attrgetter
+
+from talon import Module, actions, settings
+
+from .actions import EditAction, EditSimpleAction
+from .modifiers import EditModifier
 
 mod = Module()
+#
+# mod.setting(
+#     'edit_word_selection_delay',
+#     type=int,
+#     default=75,
+#     desc='Sleep required between word selections',
+# )
 
 mod.setting(
     'edit_word_selection_delay',
-    type=int,
-    default=75,
+    type=str,
+    default='75ms',
     desc='Sleep required between word selections',
 )
+mod.setting(
+    'edit_line_selection_delay',
+    type=str,
+    default='75ms',
+    desc='Sleep required between line selections',
+)
+
+
+class DelayedAction:
+    @staticmethod
+    def select_words(action, modifier):
+        direction = modifier.kind
+        count = modifier.count
+        # delay = settings.get('edit_word_selection_delay')
+        delay = settings.get('user.edit_word_selection_delay')
+
+        if direction == 'wordLeft':
+            callback = actions.edit.extend_word_left
+        else:
+            callback = actions.edit.extend_word_right
+
+        for _ in range(count):
+            callback()
+            actions.sleep(delay)
+
+        actions.user.apply_edit(action)
+
+    @staticmethod
+    def move_by_word(action, modifier):
+        direction = modifier.kind
+        count = modifier.count
+        # delay = settings.get('edit_word_selection_delay')
+        delay = settings.get('user.edit_word_selection_delay')
+
+        if direction == 'wordLeft':
+            callback = actions.edit.word_left
+        else:
+            callback = actions.edit.word_right
+
+        for _ in range(count):
+            callback()
+            actions.sleep(delay)
+
+    @staticmethod
+    def select_lines(action, modifier):
+        direction = modifier.kind
+        count = modifier.count
+        # delay = settings.get('edit_line_selection_delay')
+        delay = settings.get('user.edit_line_selection_delay')
+
+        if direction == 'lineUp':
+            step_vertical = actions.edit.extend_line_up
+            snap_horizontal = actions.edit.extend_line_start
+        else:
+            step_vertical = actions.edit.extend_line_down
+            snap_horizontal = actions.edit.extend_line_end
+
+        for _ in range(count):
+            step_vertical()
+            actions.sleep(delay)
+
+        snap_horizontal()
+        actions.sleep(delay)
+
+        actions.user.apply_edit(action)
 
 
 throttled_callback_map = {
@@ -71,3 +150,40 @@ compound_callback_map = {
     ('cutToClipboard', 'selection'): actions.edit.cut,
     ('copyToClipboard', 'selection'): actions.edit.copy,
 }
+
+
+@mod.action_class
+class Actions:
+    def resolve_edit_action(action_modifier_pair: tuple[str, str]) -> Callable | None:
+        """Resolve the specialized handler for an edit action and modifier pair"""
+        if name := throttled_callback_map.get(action_modifier_pair):
+            # f = methodcaller(name)
+            # return f(DelayedAction)
+            #
+            f = attrgetter(name)
+            return f(DelayedAction)
+
+        else:
+            return compound_callback_map.get(action_modifier_pair)
+
+    def dispatch_edit_command(
+        action: EditAction | str, modifier: EditModifier | str
+    ) -> None:
+        """Executes an edit action against a specific text modifier"""
+        if isinstance(action, str):
+            action = EditSimpleAction(action)
+
+        if isinstance(modifier, str):
+            modifier = EditModifier(modifier)
+
+        key = (action.kind, modifier.kind)
+
+        if callback := actions.user.resolve_edit_action(key):
+            if signature(callback).parameters.get('modifier'):
+                callback(action, modifier)
+
+            else:
+                callback()
+        else:
+            actions.user.apply_edit_modifier(modifier)
+            actions.user.apply_edit(action)

@@ -3,13 +3,14 @@ from talon import Context, Module
 mod = Module()
 ctx = Context()
 
-
-mod.list('edit_repeatable_motion', desc='Repeatable cursor motions')
+# mod.list('edit_repeatable_motion', desc='Repeatable cursor motions')
+mod.list('edit_repeatable_modifier', desc='Edit repeatable modifiers')
 mod.list('edit_modifier', desc='Edit action modifiers')
 mod.list('edit_action', desc='Edit actions')
 
 
-ctx.lists['user.edit_repeatable_motion'] = {
+# ctx.lists['user.edit_repeatable_motion'] = {
+ctx.lists['user.edit_repeatable_modifier'] = {
     'left': 'left',
     'right': 'right',
     'word': 'word',
@@ -18,7 +19,6 @@ ctx.lists['user.edit_repeatable_motion'] = {
     'line up': 'lineUp',
     'line down': 'lineDown',
 }
-
 
 ctx.lists['user.edit_modifier'] = {
     'all': 'document',

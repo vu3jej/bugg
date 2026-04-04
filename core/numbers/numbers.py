@@ -129,7 +129,7 @@ def to_digits(tokens, number_map, digits, repeaters):
             yield number_map[token]
 
 
-def transmogrify(spoken_words):
+def numericize(spoken_words):
     def from_number_vocalization(tokens, number_map):
         total = 0
         subtotal = 0
@@ -175,20 +175,23 @@ def transmogrify(spoken_words):
 
 
 @mod.capture(rule=number_rule)
-def number_s(m) -> str:
-    return transmogrify(list(m))
+def number_as_string(m) -> str:
+    return numericize(list(m))
 
 
-@ctx.capture('number', rule='<user.number_s>')
+@ctx.capture('number', rule='<user.number_as_string>')
 def number(m) -> int:
-    return int(m.number_s)
+    return int(m.number_as_string)
 
 
-@ctx.capture('number_between_1_and_100', rule='<user.number_s>')
-def a_small_number(m) -> int:
-    number_i = int(m.number_s)
+# @ctx.capture('number_between_1_and_100', rule='<user.number_as_string>')
 
-    if 0 < number_i < 100:
-        return number_i
+
+@mod.capture(rule='<user.number_as_string>')
+def times(m) -> int:
+    num = int(m.number_as_string)
+
+    if 0 < num < 100:
+        return num
     else:
         raise ValueError('The number must be between 1 and 99.')

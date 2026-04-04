@@ -2,7 +2,7 @@ import re
 from collections import deque
 from functools import partial
 
-from talon import Module, actions
+from talon import Module, actions, app
 
 mod = Module()
 
@@ -69,7 +69,7 @@ def format_identifier(m) -> str:
 
 
 def string_to_tokens(string):
-    return re.findall(r'[a-zA-Z0-9]+', string)
+    return re.findall(r'[A-Z]+(?=[A-Z][a-z])|[A-Z]?[a-z]+|[A-Z]+|[0-9]+', string)
 
 
 def format_phrase(text, formatters: list[str]) -> str:
@@ -100,3 +100,14 @@ class Actions:
         #     formatters = [formatters]
         formatted_text = actions.user.get_formatted_text(text, formatters)
         actions.insert(formatted_text)
+
+    def reformat_selection(formatters: list[str]) -> None:
+        """Reformats current selection with the given formatters"""
+        selection = actions.edit.selected_text()
+        if not selection:
+            app.notify('No selection')
+            return
+
+        actions.edit.delete()
+        reformatted_text = actions.user.get_formatted_text(selection, formatters)
+        actions.insert(reformatted_text)

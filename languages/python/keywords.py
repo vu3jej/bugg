@@ -16,7 +16,7 @@ ctx.lists['user.keyword'] = {
     'break': 'break',
     'class': 'class',
     'continue': 'continue',
-    'funk': 'def',
+    'deaf': 'def',
     'delete': 'del',
     'elf': 'elif',
     'else': 'else',

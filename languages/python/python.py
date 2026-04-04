@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from talon import Context, Module
 
 mod = Module()
@@ -14,7 +16,7 @@ mod.list('enclosing_delimiter', desc='does what it says on the tin')
 mod.list('other_delimiter', desc='does what it says on the tin')
 
 
-ctx.tags = ['user.keywords', 'user.operators']
+ctx.tags = ['user.built_ins', 'user.keywords', 'user.operators']
 
 
 @ctx.capture(
@@ -22,3 +24,14 @@ ctx.tags = ['user.keywords', 'user.operators']
 )
 def operator(m):
     return str(m)
+
+
+@ctx.capture('user.built_in', rule='{user.built_in_func}|{user.string_method} string')
+def built_in(m):
+    with suppress(AttributeError):
+        func = f'{m.built_in_func}()'
+
+    with suppress(AttributeError):
+        func = f'.{m.string_method}()'
+
+    return func
