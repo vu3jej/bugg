@@ -1,8 +1,11 @@
 mode: sleep
 tag: user.wispr_flow_active
 -
-stop dictation:
+parrot(shush):
     user.stop_dictation()
 
-cancel dictation:
+[scribble] done:
+    user.stop_dictation()
+
+scratch [that]:
     user.cancel_dictation()

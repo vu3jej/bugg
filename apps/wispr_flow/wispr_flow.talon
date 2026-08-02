@@ -1,4 +1,4 @@
 mode: command
 -
-start dictation:
+scribble:
     user.start_dictation()
