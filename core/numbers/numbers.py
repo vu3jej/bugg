@@ -57,6 +57,9 @@ scales: list[str] = [
     'quintillion',
     'sextillion',
     'septillion',
+    'octillion',
+    'nonillion',
+    'decillion',
 ]
 
 
@@ -72,7 +75,21 @@ named_numbers: dict[str, int] = dict(
 
 
 repeaters: dict[str, int] = dict(
-    zip(['single', 'double', 'triple', 'quadruple', 'quintuple'], count(1))
+    zip(
+        [
+            'single',
+            'double',
+            'triple',
+            'quadruple',
+            'quintuple',
+            'sextuple',
+            'septuple',
+            'octuple',
+            'nonuple',
+            'decuple',
+        ],
+        count(1),
+    )
 )
 
 
@@ -89,9 +106,6 @@ homophones: dict[str, str] = {
 words_to_ignore: list[str] = ['and']
 
 
-digit_word_list = digits + list(repeaters.keys())
-
-
 number_rule = (
     '('
     + '|'.join(
@@ -101,44 +115,63 @@ number_rule = (
 )
 
 
-def normalize_tokens(spoken_words, homophones, ignored_words):
-    for word in spoken_words:
-        token = homophones.get(word, word)
-        if token not in ignored_words:
-            yield token
+class Numericizer:
+    def __init__(
+        self,
+        homophones_dct: dict[str, str] = homophones,
+        ignore_words: list[str] = words_to_ignore,
+        numbers_dct: dict[str, int] = named_numbers,
+        digits: list[str] = digits,
+        repeaters_dct: dict[str, int] = repeaters,
+        scales: list[str] = scales,
+    ):
+        self.homophones_dct = homophones_dct
+        self.ignore_words = ignore_words
+        self.numbers_dct = numbers_dct
+        self.digits = digits
+        self.repeaters_dct = repeaters_dct
+        self.scales = scales
+        self.digit_word_list = digits + list(repeaters_dct.keys())
 
+    def normalize_tokens(self, spoken_words):
+        for word in spoken_words:
 
-def to_digits(tokens, number_map, digits, repeaters):
-    iterator = iter(tokens)
+            token = self.homophones_dct.get(word, word)
+            if token not in self.ignore_words:
+                yield token
 
-    for token in iterator:
-        if token in repeaters:
-            times = repeaters[token]
+    def _to_digits(self, tokens):
+        iterator = iter(tokens)
 
-            try:
-                following_token = next(iterator)
-            except StopIteration:
-                return
+        for token in iterator:
 
-            if following_token in digits:
-                value = number_map[following_token]
-                yield from repeat(value, times)
-            else:
-                return
-        elif token in digits:
-            yield number_map[token]
+            if token in self.repeaters_dct:
+                times = self.repeaters_dct[token]
 
+                try:
+                    following_token = next(iterator)
+                except StopIteration:
+                    return
 
-def numericize(spoken_words):
-    def from_number_vocalization(tokens, number_map):
+                if following_token in self.digits:
+
+                    value = self.numbers_dct[following_token]
+                    yield from repeat(value, times)
+                else:
+                    return
+
+            elif token in self.digits:
+                yield self.numbers_dct[token]
+
+    def _from_number_vocalization(self, tokens):
         total = 0
         subtotal = 0
 
         for token in tokens:
-            if token not in number_map:
+            if token not in self.numbers_dct:
                 continue
 
-            value = number_map[token]
+            value = self.numbers_dct[token]
 
             if token == 'hundred':
                 if subtotal != 0:
@@ -146,7 +179,7 @@ def numericize(spoken_words):
                 else:
                     subtotal += value
 
-            elif token in scales:
+            elif token in self.scales:
                 if subtotal != 0:
                     total += subtotal * value
                 else:
@@ -159,39 +192,23 @@ def numericize(spoken_words):
 
         return total + subtotal
 
-    def from_digit_vocalization(tokens, number_map, digits, repeaters) -> str:
-        gen = to_digits(tokens, number_map, digits, repeaters)
+    def _from_digit_vocalization(self, tokens) -> str:
+        gen = self._to_digits(tokens)
+
         return ''.join(str(value) for value in gen)
 
-    tokens = normalize_tokens(spoken_words, homophones, words_to_ignore)
-    if all(t in digit_word_list for t in tokens):
-        if number_as_str := from_digit_vocalization(
-            tokens, named_numbers, digits, repeaters
-        ):
-            return number_as_str
-    else:
-        if number := from_number_vocalization(tokens, named_numbers):
-            return str(number)
+    def numericize(self, spoken_words):
+        tokens = list(self.normalize_tokens(spoken_words))
+
+        if all(t in self.digit_word_list for t in tokens):
+            if number_as_str := self._from_digit_vocalization(tokens):
+
+                return number_as_str
+        else:
+            if number := self._from_number_vocalization(tokens):
+
+                return str(number)
 
 
-@mod.capture(rule=number_rule)
-def number_as_string(m) -> str:
-    return numericize(list(m))
-
-
-@ctx.capture('number', rule='<user.number_as_string>')
-def number(m) -> int:
-    return int(m.number_as_string)
-
-
-# @ctx.capture('number_between_1_and_100', rule='<user.number_as_string>')
-
-
-@mod.capture(rule='<user.number_as_string>')
-def times(m) -> int:
-    num = int(m.number_as_string)
-
-    if 0 < num < 100:
-        return num
-    else:
-        raise ValueError('The number must be between 1 and 99.')
+def utterance_to_arabic(spoken_words):
+    return Numericizer().numericize(spoken_words)
