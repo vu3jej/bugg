@@ -5,3 +5,9 @@ open agent panel:
 
 close agent panel:
     user.close_agent_panel()
+
+allow [agent prompt]:
+    user.allow_agent_prompt()
+
+deny [agent prompt]:
+    user.deny_agent_prompt()

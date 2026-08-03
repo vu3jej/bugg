@@ -26,3 +26,11 @@ class UserActions:
     def close_agent_panel() -> None:
         """Close the agent panel."""
         actions.key('cmd-b')
+
+    def allow_agent_prompt() -> None:
+        """Allow the currently proposed LLM agent prompt."""
+        actions.key('cmd-y')
+
+    def deny_agent_prompt() -> None:
+        """Deny the currently proposed LLM agent prompt."""
+        actions.key('alt-cmd-z')

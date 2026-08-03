@@ -16,3 +16,9 @@ class Actions:
 
     def close_agent_panel() -> None:
         """Close the agent panel."""
+
+    def allow_agent_prompt() -> None:
+        """Allow the currently proposed LLM agent prompt."""
+
+    def deny_agent_prompt() -> None:
+        """Deny the currently proposed LLM agent prompt."""
