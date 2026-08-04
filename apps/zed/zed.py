@@ -23,6 +23,12 @@ class UserActions:
         """Open the agent panel."""
         actions.key('cmd-shift-/')
 
+    def open_new_agent_thread() -> None:
+        """Open a new agent thread."""
+        actions.key('alt-cmd-shift-n')
+        actions.sleep('100ms')
+        actions.key('cmd-n')
+
     def close_agent_panel() -> None:
         """Close the agent panel."""
         actions.key('cmd-b')
