@@ -6,7 +6,7 @@ open agent panel:
 close agent panel:
     user.close_agent_panel()
 
-allow [agent prompt]:
+allow [agent prompt]|yes:
     user.allow_agent_prompt()
 
 deny [agent prompt]:
