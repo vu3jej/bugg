@@ -1,7 +1,7 @@
 mode: sleep
 tag: user.wispr_flow_active
 -
-[scribble] done:
+[scribble] (done | wrap):
     user.stop_dictation()
 
 scratch [that]:
