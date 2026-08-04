@@ -52,22 +52,25 @@ modifier_callback_map: dict[str, Callable] = {
 }
 
 
-@mod.capture(rule='[<times>] {user.edit_repeatable_modifier}')
+@mod.capture(rule='[<user.positive_small_integer>] {user.edit_repeatable_modifier}')
 def navigation_step(m) -> NavigationStep:
     count = 1
     modifier = m.edit_repeatable_modifier
 
     with suppress(AttributeError):
-        count = m.times
+        count = m.positive_small_integer
 
     return NavigationStep(kind=modifier, count=count)
 
 
-@mod.capture(rule='{user.edit_modifier}|[<times>] {user.edit_repeatable_modifier}')
+@mod.capture(
+    rule='{user.edit_modifier}|[<user.positive_small_integer>] {user.edit_repeatable_modifier}'
+)
 def edit_modifier(m) -> EditModifier:
     count = 1
+
     with suppress(AttributeError):
-        count = m.multiplier
+        count = m.positive_small_integer
 
     with suppress(AttributeError):
         kind = m.edit_modifier
