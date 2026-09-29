@@ -32,6 +32,12 @@ class WisprFlowActions:
         actions.speech.enable()
         ctx.tags = []
 
+    def restart_dictation() -> None:
+        """Cancel the current dictation and start a fresh session."""
+        actions.user.cancel_dictation()
+        actions.sleep('100ms')
+        actions.user.start_dictation()
+
     def enable_speech_if_not_wispr_flow() -> None:
         """Enable speech only when Wispr Flow mode is not active."""
         if 'user.wispr_flow_active' in ctx.tags:

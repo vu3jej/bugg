@@ -14,3 +14,6 @@ allow [agent prompt]|yes:
 
 deny [agent prompt]:
     user.deny_agent_prompt()
+
+{user.agent_reply_prompt}:
+    user.confirm_agent_response(agent_reply_prompt)

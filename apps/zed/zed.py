@@ -40,3 +40,8 @@ class UserActions:
     def deny_agent_prompt() -> None:
         """Deny the currently proposed LLM agent prompt."""
         actions.key('alt-cmd-z')
+
+    def confirm_agent_response(message: str) -> None:
+        """Send a confirmation message to the agent."""
+        actions.insert(message)
+        actions.key('enter')
