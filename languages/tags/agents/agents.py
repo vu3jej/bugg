@@ -10,25 +10,17 @@ mod.list('agent_reply_prompt', desc='Reply prompts to send to the agent')
 ctx = Context()
 ctx.matches = 'tag: user.agents'
 
-ctx.selections['user.agent_reply_prompt'] = """
-go ahead
-
-go for it
-
-please continue
-
-make the change
-
-use that approach
-
-that works
-
-approved
-
-confirm
-
-you may proceed
-"""
+ctx.lists['user.agent_reply_prompt'] = {
+    'go ahead': 'go ahead',
+    'go for it': 'go for it',
+    'please continue': 'please continue',
+    'make the change': 'make the change',
+    'use that approach': 'use that approach',
+    'that works': 'that works',
+    'approved': 'approved',
+    'confirm': 'confirm',
+    'you may proceed': 'you may proceed',
+}
 
 
 @mod.action_class
