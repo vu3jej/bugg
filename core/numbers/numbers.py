@@ -1,237 +1,108 @@
-import operator
-from collections.abc import Iterator
-from itertools import accumulate, chain, count, repeat
+"""Implement Talon's documented built-in numeric captures."""
 
-from talon import Context, Module
+from collections.abc import Iterable
+from dataclasses import dataclass
+from decimal import Decimal
 
-mod = Module()
+from talon import Context
+
 ctx = Context()
 
 
-digits: list[str] = [
-    'zero',
-    'one',
-    'two',
-    'three',
-    'four',
-    'five',
-    'six',
-    'seven',
-    'eight',
-    'nine',
-]
+@dataclass(frozen=True)
+class NumberGrouping:
+    digit: list[str]
+    number_small: list[str]
+    number_meta: list[str]
+    number_scale: list[str]
 
 
-teens: list[str] = [
-    'ten',
-    'eleven',
-    'twelve',
-    'thirteen',
-    'fourteen',
-    'fifteen',
-    'sixteen',
-    'seventeen',
-    'eighteen',
-    'nineteen',
-]
+def parse_number(values: Iterable[str], grouping: NumberGrouping) -> int:
+    """Combine numeric values in spoken order using their capture lists."""
+    tokens = [value for value in values if value not in grouping.number_meta]
 
+    scales = [
+        (int(Decimal(value)), index)
+        for index, value in enumerate(tokens)
+        if value in grouping.number_scale
+    ]
 
-tens: list[str] = [
-    'ten',
-    'twenty',
-    'thirty',
-    'forty',
-    'fifty',
-    'sixty',
-    'seventy',
-    'eighty',
-    'ninety',
-]
+    if scales:
+        scale, index = max(scales)
 
-
-scales: list[str] = [
-    'thousand',
-    'million',
-    'billion',
-    'trillion',
-    'quadrillion',
-    'quintillion',
-    'sextillion',
-    'septillion',
-    'octillion',
-    'nonillion',
-    'decillion',
-]
-
-
-named_numbers: dict[str, int] = dict(
-    chain(
-        zip(digits, count()),
-        zip(teens, count(10)),
-        zip(tens, count(10, 10)),
-        [('hundred', 100)],
-        zip(scales, accumulate(repeat(1000), operator.mul)),
-    )
-)
-
-
-repeaters: dict[str, int] = dict(
-    zip(
-        [
-            'single',
-            'double',
-            'triple',
-            'quadruple',
-            'quintuple',
-            'sextuple',
-            'septuple',
-            'octuple',
-            'nonuple',
-            'decuple',
-        ],
-        count(1),
-    )
-)
-
-
-homophones: dict[str, str] = {
-    'oh': 'zero',
-    'naught': 'zero',
-    'won': 'one',
-    'to': 'two',
-    'too': 'two',
-    'ate': 'eight',
-}
-
-
-words_to_ignore: list[str] = ['and']
-
-
-number_rule = (
-    '('
-    + '|'.join(
-        chain(digits, tens, teens, scales, repeaters, homophones, words_to_ignore)
-    )
-    + ')+'
-)
-
-
-class Numericizer:
-    def __init__(
-        self,
-        homophones_dct: dict[str, str] = homophones,
-        ignore_words: list[str] = words_to_ignore,
-        numbers_dct: dict[str, int] = named_numbers,
-        digits: list[str] = digits,
-        repeaters_dct: dict[str, int] = repeaters,
-        scales: list[str] = scales,
-    ) -> None:
-        self.homophones_dct = homophones_dct
-        self.ignore_words = ignore_words
-        self.numbers_dct = numbers_dct
-        self.digits = digits
-        self.repeaters_dct = repeaters_dct
-        self.scales = scales
-        self.digit_word_list = digits + list(repeaters_dct.keys())
-
-    def normalize_tokens(self, spoken_words: list[str]) -> Iterator[str]:
-        for word in spoken_words:
-            token = self.homophones_dct.get(word, word)
-            if token not in self.ignore_words:
-                yield token
-
-    def _to_digits(self, tokens: list[str]) -> Iterator[int]:
-        iterator = iter(tokens)
-
-        for token in iterator:
-            if token in self.repeaters_dct:
-                times = self.repeaters_dct[token]
-
-                try:
-                    following_token = next(iterator)
-                except StopIteration:
-                    return
-
-                if following_token in self.digits:
-                    value = self.numbers_dct[following_token]
-                    yield from repeat(value, times)
-                else:
-                    return
-
-            elif token in self.digits:
-                yield self.numbers_dct[token]
-
-    def _from_number_vocalization(self, tokens: list[str]) -> int:
-        total = 0
-        subtotal = 0
-
-        for token in tokens:
-            if token not in self.numbers_dct:
-                continue
-
-            value = self.numbers_dct[token]
-
-            if token == 'hundred':
-                if subtotal != 0:
-                    subtotal = subtotal * value
-                else:
-                    subtotal += value
-
-            elif token in self.scales:
-                if subtotal != 0:
-                    total += subtotal * value
-                else:
-                    total += value
-
-                subtotal = 0
-
-            else:
-                subtotal += value
-
-        return total + subtotal
-
-    def _from_digit_vocalization(self, tokens: list[str]) -> str:
-        gen = self._to_digits(tokens)
-
-        return ''.join(str(value) for value in gen)
-
-    def numericize(self, spoken_words: list[str]) -> str | None:
-        tokens = list(self.normalize_tokens(spoken_words))
-
-        if all(t in self.digit_word_list for t in tokens):
-            if number_as_str := self._from_digit_vocalization(tokens):
-                return number_as_str
+        if index > 0:
+            # "two hundred": index is 1, so parse "two" as coefficient 2.
+            coefficient = parse_number(tokens[:index], grouping)
         else:
-            if number := self._from_number_vocalization(tokens):
-                return str(number)
+            # "hundred" or "a hundred" (after filtering metadata): index is 0.
+            # An absent prefix implies 1; parsing an empty prefix would give 0.
+            coefficient = 1
 
-        return None
+        return coefficient * scale + parse_number(tokens[index + 1 :], grouping)
+
+    number = previous = 0
+
+    for token in tokens:
+        value = int(token)
+
+        # "forty two" may be one entry ("forty two" -> "42" in number_small),
+        # or two: "forty" -> "40" in number_small, then "two" -> "2" in digit.
+        # Add the split entries to get 42 rather than concatenate them into 402.
+        if 20 <= previous <= 90 and previous % 10 == 0 and 0 < value < 10:
+            number += value
+        else:
+            # Concatenate number chunks rather than sum them: "twenty twenty" -> 2020.
+            # At the second token:
+            # number = 20, token = "20", value = 20, len(token) = 2
+            # 20 * 10 ** 2 + 20 = 2020
+            number = number * 10 ** len(token) + value
+
+        previous = value
+
+    return number
 
 
-POSITIVE_SMALL_INTEGER_MIN = 0
-POSITIVE_SMALL_INTEGER_MAX = 32767
+@ctx.capture('digit_string', rule='{digit}+')
+def digit_string(m) -> str:
+    """Capture a series of digits, as a string."""
+    return ''.join(m.digit_list)
 
 
-@mod.capture(rule=number_rule)
-def utterance_to_arabic(m) -> str:
-    spoken_words = list(m)
-    parsed_value = Numericizer().numericize(spoken_words)
-
-    if parsed_value is None:
-        raise ValueError('Could not parse spoken words into a number.')
-
-    return parsed_value
+@ctx.capture('digits', rule='<digit_string>')
+def digits(m) -> int:
+    """Capture a series of digits as a single integer."""
+    return int(m.digit_string)
 
 
-@mod.capture(rule='<user.utterance_to_arabic>')
-def positive_small_integer(m) -> int:
-    spoken_number = m.utterance_to_arabic
+@ctx.capture(
+    'number_string',
+    rule='({digit} | {number_small} | {number_meta} | {number_scale})+',
+)
+def number_string(m) -> str:
+    """Capture a naturally-spoken positive integer of any size, as a string."""
+    grouping = NumberGrouping(
+        digit=m.digit_list,
+        number_small=m.number_small_list,
+        number_meta=m.number_meta_list,
+        number_scale=m.number_scale_list,
+    )
 
-    value = int(spoken_number)
+    return str(parse_number(m, grouping))
 
-    if not (POSITIVE_SMALL_INTEGER_MIN <= value <= POSITIVE_SMALL_INTEGER_MAX):
-        raise ValueError(
-            f'Number {value} is not within the range 0..32767 for positive small integers.'
-        )
 
-    return value
+@ctx.capture('number', rule='<number_string>')
+def number(m) -> int:
+    """Capture a naturally-spoken positive integer of any size."""
+    return int(m.number_string)
+
+
+@ctx.capture('number_signed', rule='[{number_sign}] <number>')
+def number_signed(m) -> int:
+    """Capture a naturally-spoken integer of any size."""
+    return -m.number if hasattr(m, 'number_sign') else m.number
+
+
+@ctx.capture('number_small', rule='{digit} | {number_small}')
+def number_small(m) -> int:
+    """Capture a naturally-spoken integer under 100."""
+    return int(m[0])
