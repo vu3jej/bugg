@@ -1,0 +1,70 @@
+list: special_key
+-
+delete: backspace
+end: end
+enter: enter
+escape: escape
+forward delete: delete
+home: home
+insert: insert
+menu key: menu
+minus: minus
+page down: pagedown
+page up: pageup
+print screen: printscr
+return: return
+space: space
+tab: tab
+wipe: backspace
+
+# arrow keys
+down: down
+left: left
+right: right
+up: up
+
+# function keys
+f one: f1
+f two: f2
+f three: f3
+f four: f4
+f five: f5
+f six: f6
+f seven: f7
+f eight: f8
+f nine: f9
+f ten: f10
+f eleven: f11
+f twelve: f12
+f thirteen: f13
+f fourteen: f14
+f fifteen: f15
+f sixteen: f16
+f seventeen: f17
+f eighteen: f18
+f nineteen: f19
+f twenty: f20
+f twenty one: f21
+f twenty two: f22
+f twenty three: f23
+f twenty four: f24
+
+# keypad keys
+key pad zero: keypad_0
+key pad one: keypad_1
+key pad two: keypad_2
+key pad three: keypad_3
+key pad four: keypad_4
+key pad five: keypad_5
+key pad six: keypad_6
+key pad seven: keypad_7
+key pad eight: keypad_8
+key pad nine: keypad_9
+key pad clear: keypad_clear
+key pad enter: keypad_enter
+key pad equals: keypad_equals
+key pad minus: keypad_minus
+key pad plus: keypad_plus
+key pad point: keypad_decimal
+key pad slash: keypad_divide
+key pad star: keypad_multiply

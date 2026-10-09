@@ -1,0 +1,8 @@
+list: modifier
+-
+control: ctrl
+alt: alt
+option: alt
+shift: shift
+command: super
+super: super
