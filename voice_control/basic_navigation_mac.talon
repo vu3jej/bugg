@@ -14,15 +14,15 @@ hide [this] application:
     app.hide()
 
 toggle [the] dock:
-    key(symbolic_toggle_dock_autohide)
+    key(cmd-alt-d)
 
 next space:
-    key(symbolic_space_right)
+    key(ctrl-right)
 previous space:
-    key(symbolic_space_left)
+    key(ctrl-left)
 
 search spotlight for <phrase>:
-    key(symbolic_spotlight_search_field)
+    key(cmd-space)
     sleep(100ms)
     auto_insert(phrase)
     apps.focus("Spotlight")
