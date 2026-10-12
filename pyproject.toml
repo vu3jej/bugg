@@ -14,6 +14,7 @@ indent-width = 4
 
 [tool.ruff.lint]
 select =["ANN", "B", "D", "E", "F", "FURB", "I", "N", "S", "UP"]
+ignore = ["N805"]
 
 [tool.ruff.format]
 # Enable reformatting of code snippets in docstrings.

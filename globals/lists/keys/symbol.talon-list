@@ -1,0 +1,82 @@
+list: symbol
+-
+back tick: `
+caret: ^
+comma: ,
+equals: =
+grave: `
+pipe: |
+plus: +
+tilde: ~
+
+dot: .
+full stop: .
+period: .
+point: .
+
+colon: :
+semicolon: ;
+
+question mark: ?
+question: ?
+
+exclamation mark: !
+exclamation point: !
+
+asterisk: *
+star: *
+
+hash sign: #
+number sign: #
+
+percent sign: %
+percent: %
+
+at sign: @
+at symbol: @
+
+amper: &
+ampersand: &
+and sign: &
+
+dash: -
+hyphen: -
+minus: -
+
+down score: _
+underscore: _
+
+forward slash: /
+slash: /
+
+backslash: \
+
+# brackets
+left paren: (
+paren: (
+right paren: )
+
+bracket: [
+left bracket: [
+right bracket: ]
+
+brace: {
+curly bracket: {
+left curly bracket: {
+right brace: }
+right curly bracket: }
+
+angle bracket: <
+left angle bracket: <
+less than: <
+greater than: >
+right angle bracket: >
+
+apostrophe: "'"
+double quote: '"'
+quote: "'"
+
+dollar sign: $
+dollar: $
+pound sign: £
+pound: £
