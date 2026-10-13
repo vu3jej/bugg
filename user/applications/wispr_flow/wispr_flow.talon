@@ -1,4 +1,4 @@
 mode: command
 -
-memo:
+whisper [on]:
     user.start_dictation()

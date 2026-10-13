@@ -1,13 +1,12 @@
 """Wispr Flow dictation actions."""
 
 from talon import Context, Module, actions
+from talon.mac import applescript
 
 mod = Module()
 ctx = Context()
 
-mod.tag('wispr_flow_active', desc='Dictation overlay is active')
-
-hotkey = 'alt-shift-h'
+mod.tag('recording', desc='Recording is active')
 
 
 @mod.action_class
@@ -15,14 +14,18 @@ class WisprFlowActions:
     """Actions used to control Wispr Flow dictation state."""
 
     def start_dictation() -> None:
-        """Disable speech recognition and mark Wispr Flow as active."""
-        ctx.tags = ['user.wispr_flow_active']
+        """Start Wispr Flow dictation with Talon speech recognition disabled."""
+        ctx.tags = ['user.recording']
         actions.speech.disable()
-        actions.key(hotkey)
+        applescript.run(
+            'do shell script "open --background wispr-flow://start-hands-free"'
+        )
 
     def stop_dictation() -> None:
-        """Enable speech recognition and clear Wispr Flow active tag."""
-        actions.key(hotkey)
+        """Stop Wispr Flow dictation and re-enable Talon speech recognition."""
+        applescript.run(
+            'do shell script "open --background wispr-flow://stop-hands-free"'
+        )
         actions.speech.enable()
         ctx.tags = []
 
@@ -31,15 +34,3 @@ class WisprFlowActions:
         actions.key('escape')
         actions.speech.enable()
         ctx.tags = []
-
-    def restart_dictation() -> None:
-        """Cancel the current dictation and start a fresh session."""
-        actions.user.cancel_dictation()
-        actions.sleep('100ms')
-        actions.user.start_dictation()
-
-    def enable_speech_if_not_wispr_flow() -> None:
-        """Enable speech only when Wispr Flow mode is not active."""
-        if 'user.wispr_flow_active' in ctx.tags:
-            return
-        actions.speech.enable()
