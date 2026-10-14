@@ -1,4 +1,4 @@
-from talon import Context, actions, ui
+from talon import Context, actions
 
 ctx = Context()
 ctx.matches = 'os: mac'
@@ -20,26 +20,20 @@ app_aliases: dict[str, tuple[str, ...]] = {
 @ctx.dynamic_list('apps.list')
 def launchable(phrase: list[str]) -> dict[str, str]:
     """Add aliases for launchable app names."""
-    apps_list = actions.apps.list()
-    app_names = {app_name.casefold() for app_name in apps_list}
+    apps = actions.apps.list()
 
     return {
         alias: app_path
-        for app_name, app_path in apps_list.items()
+        for app_name, app_path in apps.items()
         for alias in app_aliases.get(app_name, ())
-        if alias.casefold() not in app_names
-    } | apps_list
+    } | apps
 
 
 @ctx.dynamic_list('apps.running')
-def running(phrase: list[str]) -> dict[str, ui.App]:
+def running(phrase: list[str]) -> dict[str, str]:
     """Add aliases for running app names."""
-    apps_running = actions.apps.running()
-    app_names = {app_name.casefold() for app_name in apps_running}
+    apps = {app_name: app_name for app_name in actions.apps.running()}
 
     return {
-        alias: app
-        for app_name, app in apps_running.items()
-        for alias in app_aliases.get(app_name, ())
-        if alias.casefold() not in app_names
-    } | apps_running
+        alias: app_name for app_name in apps for alias in app_aliases.get(app_name, ())
+    } | apps
