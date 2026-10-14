@@ -1,26 +1,10 @@
 """Agents language tag actions."""
 
-from talon import Context, Module
+from talon import Module
 
 mod = Module()
 
 mod.tag('agents', desc='Controls for agent panel actions in any IDE or editor')
-mod.list('agent_reply_prompt', desc='Reply prompts to send to the agent')
-
-ctx = Context()
-ctx.matches = 'tag: user.agents'
-
-ctx.lists['user.agent_reply_prompt'] = {
-    'go ahead': 'go ahead',
-    'go for it': 'go for it',
-    'please continue': 'please continue',
-    'make the change': 'make the change',
-    'use that approach': 'use that approach',
-    'that works': 'that works',
-    'approved': 'approved',
-    'confirm': 'confirm',
-    'you may proceed': 'you may proceed',
-}
 
 
 @mod.action_class
@@ -41,6 +25,3 @@ class Actions:
 
     def deny_agent_prompt() -> None:
         """Deny the currently proposed LLM agent prompt."""
-
-    def confirm_agent_response(message: str) -> None:
-        """Send a confirmation message to the agent."""
