@@ -2,7 +2,6 @@
 
 from talon import Context, Module, actions, app
 
-# Context matching restricts action dispatch, not Python imports.
 if app.platform == 'mac':
     from talon.mac import applescript
 
@@ -14,7 +13,7 @@ mod.tag('recording', desc='Recording is active')
 
 
 @mod.action_class
-class WisprFlowActions:
+class Actions:
     """Actions used to control Wispr Flow dictation state."""
 
     def start_dictation() -> None:
@@ -28,7 +27,7 @@ class WisprFlowActions:
 
 
 @ctx.action_class('user')
-class WisprFlowMacActions:
+class MacActions:
     """Implement Wispr Flow dictation actions on macOS."""
 
     def start_dictation() -> None:
